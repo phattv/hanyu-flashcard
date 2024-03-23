@@ -67,7 +67,7 @@ const Flashcard = ({ word, showAnswer, handleShowAnswer }) => {
         )}
         {showAnswer && (
           <Card.Text className="feedback">
-            {correctAnswer ? '✅ Đúng! 💯' : `❌ Sai! 🅾️ - ${word['汉语']} - ${word['pinyin']}`}
+            {correctAnswer ? '✅ Đúng! 💯' : `❌ Sai! - ${word['汉语']} - ${word['pinyin']}`}
           </Card.Text>
         )}
       </Card.Body>

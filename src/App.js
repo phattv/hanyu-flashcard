@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Papa from 'papaparse';
 import React, { useEffect, useState } from 'react';
 import { Button, Container } from 'react-bootstrap';
 import Flashcard from './components/Flashcard';
@@ -15,9 +16,16 @@ function App() {
     axios
       .get(SOURCE)
       .then((response) => {
-        const data = response.data;
-        const parsedData = parseCSV(data);
-        setWords(parsedData);
+        const csvData = response.data;
+        Papa.parse(csvData, {
+          header: true,
+          complete: (result) => {
+            setWords(result.data);
+          },
+          error: (error) => {
+            console.error('Error parsing CSV: ', error);
+          }
+        });
       })
       .catch((error) => {
         console.error('Error fetching data: ', error);
@@ -36,33 +44,6 @@ function App() {
       document.removeEventListener('keydown', handleKeyPress);
     };
   }, []);
-
-  const parseCSV = (csvData) => {
-    const lines = csvData.split('\n');
-    const headers = lines[0].split(',');
-
-    // Remove double quotes from each field
-    const removeQuotes = (field) => {
-      return field.replace(/^"(.*)"$/, '$1');
-    };
-
-    const parsedData = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const currentLine = lines[i].split(',');
-      const word = {};
-
-      for (let j = 0; j < headers.length; j++) {
-        const fieldName = headers[j].trim();
-        const fieldValue = currentLine[j] ? currentLine[j].trim() : '';
-        word[fieldName] = removeQuotes(fieldValue);
-      }
-
-      parsedData.push(word);
-    }
-
-    return parsedData;
-  };
 
   const randomizeWord = () => {
     let newIndex;
