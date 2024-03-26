@@ -1,3 +1,4 @@
+import { Button, Card, Group, Text, TextInput } from "@mantine/core";
 import HanziWriter from "hanzi-writer";
 import React, { useEffect, useRef, useState } from "react";
 import { useSpeechSynthesis } from "react-speech-kit";
@@ -47,6 +48,7 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
   const [pinyinInput, setPinyinInput] = useState("");
   const [isCorrect, setIsCorrect] = useState(false);
   const { speak, voices } = useSpeechSynthesis();
+  const voice = voices[173];
 
   const hanziWriterRef = useRef();
 
@@ -55,16 +57,15 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
       hanziWriterRef.current.innerHTML = "";
       const currentWord = word["汉字"];
       for (let i = 0; i < currentWord.length; i++) {
-        const charContainer = document.createElement("div");
-        charContainer.style.display = "inline-block";
-        charContainer.style.position = "relative";
-        charContainer.style.width = `${hanziConfig.width}px`;
-        charContainer.style.height = `${hanziConfig.height}px`;
-        charContainer.style.margin = "5px";
-        charContainer.style.border = "1px solid #DDD";
+        const hanziContainer = document.createElement("div");
+        hanziContainer.style.display = "inline-block";
+        hanziContainer.style.position = "relative";
+        hanziContainer.style.width = `${hanziConfig.width}px`;
+        hanziContainer.style.height = `${hanziConfig.height}px`;
+        hanziContainer.style.border = "1px solid #DDD";
 
         const svgBackground = createSvgBackground();
-        charContainer.appendChild(svgBackground);
+        hanziContainer.appendChild(svgBackground);
 
         const charDiv = document.createElement("div");
         charDiv.style.position = "absolute";
@@ -73,8 +74,8 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
         charDiv.style.width = "100%";
         charDiv.style.height = "100%";
 
-        charContainer.appendChild(charDiv);
-        hanziWriterRef.current.appendChild(charContainer);
+        hanziContainer.appendChild(charDiv);
+        hanziWriterRef.current.appendChild(hanziContainer);
 
         HanziWriter.create(charDiv, currentWord[i], hanziConfig).quiz({
           onComplete: () => {
@@ -93,68 +94,67 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
       pinyinInput.trim().toLowerCase() === word["pinyin"].toLowerCase()
     ) {
       setIsCorrect(true);
+      Math.random() < 0.5
+        ? speak({ text: "很好", voice })
+        : speak({ text: "好了", voice });
     } else {
       setIsCorrect(false);
+      speak({ text: "加油", voice });
     }
 
     handleShowAnswer();
   };
 
   return (
-    <div>
-      <div>
-        <p>汉字 (Hán tự): {showAnswer ? word["汉字"] : "******"}</p>
-        <p>Pinyin (phiên âm): {showAnswer ? word["pinyin"] : "******"}</p>
-        <p>Chữ HÁN: {word["chữ hán"]}</p>
-        <p>Nghĩa: {word["nghĩa"]}</p>
-        <p>Ví dụ: {showAnswer ? word["ví dụ"] : "******"}</p>
+    <Card>
+      <Card.Section>
+        <Text>汉字 (Hán tự): {showAnswer ? word["汉字"] : "******"}</Text>
+        <Text>Pinyin (phiên âm): {showAnswer ? word["pinyin"] : "******"}</Text>
+        <Text>Chữ HÁN: {word["chữ hán"]}</Text>
+        <Text>Nghĩa: {word["nghĩa"]}</Text>
+        <Text>Ví dụ: {showAnswer ? word["ví dụ"] : "******"}</Text>
         <div ref={hanziWriterRef} />
+      </Card.Section>
 
-        {!showAnswer && (
-          <>
-            <hr />
-            <div>
-              <label>汉字 (Hán tự):</label>
-              <input
-                type="text"
-                value={hanziInput}
-                autoFocus
-                onChange={(e) => setHanziInput(e.target.value)}
-              />
-            </div>
-            <div>
-              <label>Pinyin (phiên âm):</label>
-              <input
-                type="text"
-                value={pinyinInput}
-                onChange={(e) => setPinyinInput(e.target.value)}
-              />
-            </div>
-            <button
+      {!showAnswer && (
+        <Card.Section>
+          <TextInput
+            label="汉字 (Hán tự)"
+            value={hanziInput}
+            onChange={(e) => setHanziInput(e.target.value)}
+          />
+          <TextInput
+            label="Pinyin (phiên âm)"
+            value={pinyinInput}
+            onChange={(e) => setPinyinInput(e.target.value)}
+          />
+          <Group justify="space-between" mt="md">
+            <Button
+              fullWidth
               onClick={() =>
                 speak({
                   text: word["汉字"],
-                  voice: voices[173],
+                  voice,
                 })
               }
             >
               🎤
-            </button>
-            <button onClick={checkAnswer} autoFocus>
+            </Button>
+            <Button fullWidth onClick={checkAnswer} autoFocus>
               👌
-            </button>
-          </>
-        )}
+            </Button>
+          </Group>
+        </Card.Section>
+      )}
 
-        {showAnswer && (
-          <p>
-            {isCorrect
-              ? "✅ Đúng! 💯"
-              : `❌ Sai! - ${word["汉字"]} - ${word["pinyin"]}`}
-          </p>
-        )}
-      </div>
-    </div>
+      {showAnswer && (
+        <Text>
+          {isCorrect
+            ? "✅ Đúng! 💯"
+            : `❌ Sai! - ${word["汉字"]} - ${word["pinyin"]}`}
+        </Text>
+      )}
+    </Card>
   );
 };
 
