@@ -1,10 +1,10 @@
-import { Button, Card, Group, Text, TextInput } from "@mantine/core";
+import { Button, Card, Group, Stack, Text, TextInput } from "@mantine/core";
 import HanziWriter from "hanzi-writer";
 import React, { useEffect, useRef, useState } from "react";
 
 const hanziConfig = {
-  width: 200,
-  height: 200,
+  width: 150,
+  height: 150,
   padding: 5,
   showOutline: false,
   showCharacter: false,
@@ -18,14 +18,14 @@ const createSvgBackground = () => {
   const svgNS = "http://www.w3.org/2000/svg";
 
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", "200");
-  svg.setAttribute("height", "200");
+  svg.setAttribute("width", "150");
+  svg.setAttribute("height", "150");
 
   const lines = [
-    { x1: "0", y1: "0", x2: "200", y2: "200" },
-    { x1: "200", y1: "0", x2: "0", y2: "200" },
-    { x1: "100", y1: "0", x2: "100", y2: "200" },
-    { x1: "0", y1: "100", x2: "200", y2: "100" },
+    { x1: "0", y1: "0", x2: "150", y2: "150" },
+    { x1: "150", y1: "0", x2: "0", y2: "150" },
+    { x1: "75", y1: "0", x2: "75", y2: "150" },
+    { x1: "0", y1: "75", x2: "150", y2: "75" },
   ];
 
   lines.forEach(({ x1, y1, x2, y2 }) => {
@@ -105,50 +105,58 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
       speakText("加油");
     }
 
+    setHanziInput("");
+    setPinyinInput("");
     handleShowAnswer();
   };
 
   return (
     <Card>
       <Card.Section>
-        <Text>汉字 (Hán tự): {showAnswer ? word["汉字"] : "******"}</Text>
-        <Text>Pinyin (phiên âm): {showAnswer ? word["pinyin"] : "******"}</Text>
-        <Text>Chữ HÁN: {word["chữ hán"]}</Text>
-        <Text>Nghĩa: {word["nghĩa"]}</Text>
-        <Text>Ví dụ: {showAnswer ? word["ví dụ"] : "******"}</Text>
-        <div ref={hanziWriterRef} />
+        <Group>
+          <Stack flex={1} gap="xs">
+            <div ref={hanziWriterRef} />
+          </Stack>
+          <Stack flex={1} gap="xs">
+            <Text>汉字 (Hán tự): {showAnswer ? word["汉字"] : "******"}</Text>
+            <Text>
+              Pinyin (phiên âm): {showAnswer ? word["pinyin"] : "******"}
+            </Text>
+            <Text>Chữ HÁN: {word["chữ hán"]}</Text>
+            <Text>Nghĩa: {word["nghĩa"]}</Text>
+            <Text>Ví dụ: {showAnswer ? word["ví dụ"] : "******"}</Text>
+          </Stack>
+        </Group>
       </Card.Section>
 
       {!showAnswer && (
         <Card.Section>
-          <TextInput
-            label="汉字 (Hán tự)"
-            value={hanziInput}
-            onChange={(e) => setHanziInput(e.target.value)}
-          />
-          <TextInput
-            label="Pinyin (phiên âm)"
-            value={pinyinInput}
-            onChange={(e) => setPinyinInput(e.target.value)}
-          />
-          <Group justify="space-between" mt="md">
-            <Button fullWidth onClick={() => speakText(word["汉字"])}>
-              🎤
+          <Group mt="xs">
+            <TextInput
+              flex={1}
+              label="汉字 (Hán tự)"
+              value={hanziInput}
+              onChange={(e) => setHanziInput(e.target.value)}
+            />
+            <TextInput
+              flex={1}
+              label="Pinyin (phiên âm)"
+              value={pinyinInput}
+              onChange={(e) => setPinyinInput(e.target.value)}
+            />
+          </Group>
+          <Group mt="xs">
+            <Button flex={1} onClick={() => speakText(word["汉字"])}>
+              🔊
             </Button>
-            <Button fullWidth onClick={checkAnswer} autoFocus>
+            <Button flex={1} onClick={checkAnswer} autoFocus>
               👌
             </Button>
           </Group>
         </Card.Section>
       )}
 
-      {showAnswer && (
-        <Text>
-          {isCorrect
-            ? "✅ Đúng! 💯"
-            : `❌ Sai! - ${word["汉字"]} - ${word["pinyin"]}`}
-        </Text>
-      )}
+      {showAnswer && <Text>{isCorrect ? "✅ Đúng! 💯" : `❌ Sai!`}</Text>}
     </Card>
   );
 };

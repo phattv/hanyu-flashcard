@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core";
+import { Button, Text } from "@mantine/core";
 import "@mantine/core/styles.css";
 import axios from "axios";
 import Papa from "papaparse";
@@ -12,6 +12,8 @@ function App() {
   const [words, setWords] = useState([]);
   const [randomIndex, setRandomIndex] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [totalWords, setTotalWords] = useState(0);
 
   useEffect(() => {
     axios
@@ -21,7 +23,9 @@ function App() {
         Papa.parse(csvData, {
           header: true,
           complete: (result) => {
-            setWords(result.data);
+            const parsedData = result.data;
+            setWords(parsedData);
+            setTotalWords(parsedData.length);
           },
           error: (error) => {
             console.error("Error parsing CSV: ", error);
@@ -45,6 +49,7 @@ function App() {
 
   const handleShowAnswer = () => {
     setShowAnswer(true);
+    setAnsweredCount(answeredCount + 1);
   };
 
   return (
@@ -56,15 +61,18 @@ function App() {
           handleShowAnswer={handleShowAnswer}
         />
       )}
-      <Button mt="md" mb="md" fullWidth onClick={randomizeWord}>
+      <Button mt="xs" mb="xs" fullWidth onClick={randomizeWord}>
         ➡️
       </Button>
-      <a
-        target="_blank"
-        href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
-      >
-        chỉnh sửa
-      </a>
+      <Text>
+        Đã trả lời: {answeredCount} / {totalWords} &nbsp;
+        <a
+          target="_blank"
+          href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
+        >
+          chỉnh sửa
+        </a>
+      </Text>
     </div>
   );
 }
