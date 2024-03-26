@@ -13,6 +13,34 @@ const hanziConfig = {
   delayBetweenLoops: 1000,
 };
 
+const createSvgBackground = () => {
+  const svgNS = "http://www.w3.org/2000/svg";
+
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", "100");
+  svg.setAttribute("height", "100");
+
+  // Lines to be drawn on the SVG
+  const lines = [
+    { x1: "0", y1: "0", x2: "100", y2: "100" },
+    { x1: "100", y1: "0", x2: "0", y2: "100" },
+    { x1: "50", y1: "0", x2: "50", y2: "100" },
+    { x1: "0", y1: "50", x2: "100", y2: "50" },
+  ];
+
+  lines.forEach(({ x1, y1, x2, y2 }) => {
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "#DDD");
+    svg.appendChild(line);
+  });
+
+  return svg;
+};
+
 const Flashdiv = ({ word, showAnswer, handleShowAnswer }) => {
   const [hanziInput, setHanziInput] = useState("");
   const [pinyinInput, setPinyinInput] = useState("");
@@ -22,14 +50,30 @@ const Flashdiv = ({ word, showAnswer, handleShowAnswer }) => {
 
   useEffect(() => {
     if (hanziWriterRef.current && word["汉字"]) {
-      hanziWriterRef.current.innerHTML = ""; // Clear previous drawings
+      hanziWriterRef.current.innerHTML = "";
       const currentWord = word["汉字"];
       for (let i = 0; i < currentWord.length; i++) {
+        const charContainer = document.createElement("div");
+        charContainer.style.display = "inline-block";
+        charContainer.style.position = "relative";
+        charContainer.style.width = `${hanziConfig.width}px`;
+        charContainer.style.height = `${hanziConfig.height}px`;
+        charContainer.style.margin = "5px";
+        charContainer.style.border = "1px solid #DDD";
+
+        const svgBackground = createSvgBackground();
+        charContainer.appendChild(svgBackground);
+
         const charDiv = document.createElement("div");
-        charDiv.style.display = "inline-block";
-        charDiv.style.border = "1px solid black";
-        charDiv.style.margin = "5px";
-        hanziWriterRef.current.appendChild(charDiv);
+        charDiv.style.position = "absolute";
+        charDiv.style.top = "0";
+        charDiv.style.left = "0";
+        charDiv.style.width = "100%";
+        charDiv.style.height = "100%";
+
+        charContainer.appendChild(charDiv);
+        hanziWriterRef.current.appendChild(charContainer);
+
         HanziWriter.create(charDiv, currentWord[i], hanziConfig).quiz({
           onComplete: () => {
             setHanziInput(currentWord);
