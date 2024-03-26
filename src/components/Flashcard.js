@@ -1,7 +1,6 @@
 import { Button, Card, Group, Text, TextInput } from "@mantine/core";
 import HanziWriter from "hanzi-writer";
 import React, { useEffect, useRef, useState } from "react";
-import { useSpeechSynthesis } from "react-speech-kit";
 
 const hanziConfig = {
   width: 200,
@@ -22,7 +21,6 @@ const createSvgBackground = () => {
   svg.setAttribute("width", "200");
   svg.setAttribute("height", "200");
 
-  // Lines to be drawn on the SVG
   const lines = [
     { x1: "0", y1: "0", x2: "200", y2: "200" },
     { x1: "200", y1: "0", x2: "0", y2: "200" },
@@ -47,8 +45,8 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
   const [hanziInput, setHanziInput] = useState("");
   const [pinyinInput, setPinyinInput] = useState("");
   const [isCorrect, setIsCorrect] = useState(false);
-  const { speak, voices } = useSpeechSynthesis();
-  const voice = voices.find((voice) => voice.lang === "zh-CN");
+  const synth = window.speechSynthesis;
+  const voice = synth.getVoices().find((voice) => voice.lang === "zh-CN");
 
   const hanziWriterRef = useRef();
 
@@ -86,6 +84,13 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
     }
   }, [word]);
 
+  const speakText = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "zh-CN";
+    utterance.voice = voice;
+    synth.speak(utterance);
+  };
+
   const checkAnswer = () => {
     const currentWord = word["汉字"];
 
@@ -94,12 +99,10 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
       pinyinInput.trim().toLowerCase() === word["pinyin"].toLowerCase()
     ) {
       setIsCorrect(true);
-      Math.random() < 0.5
-        ? speak({ text: "很好", voice })
-        : speak({ text: "好了", voice });
+      Math.random() < 0.5 ? speakText("很好") : speakText("好了");
     } else {
       setIsCorrect(false);
-      speak({ text: "加油", voice });
+      speakText("加油");
     }
 
     handleShowAnswer();
@@ -129,15 +132,7 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
             onChange={(e) => setPinyinInput(e.target.value)}
           />
           <Group justify="space-between" mt="md">
-            <Button
-              fullWidth
-              onClick={() =>
-                speak({
-                  text: word["汉字"],
-                  voice,
-                })
-              }
-            >
+            <Button fullWidth onClick={() => speakText(word["汉字"])}>
               🎤
             </Button>
             <Button fullWidth onClick={checkAnswer} autoFocus>
