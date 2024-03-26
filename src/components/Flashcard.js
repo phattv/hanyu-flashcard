@@ -1,5 +1,6 @@
 import HanziWriter from "hanzi-writer";
 import React, { useEffect, useRef, useState } from "react";
+import { useSpeechSynthesis } from "react-speech-kit";
 
 const hanziConfig = {
   width: 100,
@@ -41,10 +42,11 @@ const createSvgBackground = () => {
   return svg;
 };
 
-const Flashdiv = ({ word, showAnswer, handleShowAnswer }) => {
+const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
   const [hanziInput, setHanziInput] = useState("");
   const [pinyinInput, setPinyinInput] = useState("");
   const [isCorrect, setIsCorrect] = useState(false);
+  const { speak, voices } = useSpeechSynthesis();
 
   const hanziWriterRef = useRef();
 
@@ -128,8 +130,18 @@ const Flashdiv = ({ word, showAnswer, handleShowAnswer }) => {
                 onChange={(e) => setPinyinInput(e.target.value)}
               />
             </div>
+            <button
+              onClick={() =>
+                speak({
+                  text: word["汉字"],
+                  voice: voices[173],
+                })
+              }
+            >
+              🎤
+            </button>
             <button onClick={checkAnswer} autoFocus>
-              ✅ or ❌
+              👌
             </button>
           </>
         )}
@@ -146,4 +158,4 @@ const Flashdiv = ({ word, showAnswer, handleShowAnswer }) => {
   );
 };
 
-export default Flashdiv;
+export default FlashCard;
