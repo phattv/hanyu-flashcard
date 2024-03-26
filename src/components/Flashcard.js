@@ -1,78 +1,105 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Card, Form } from 'react-bootstrap';
-import './Flashcard.css'; // Import your custom CSS file for additional styling
+import HanziWriter from "hanzi-writer";
+import React, { useEffect, useRef, useState } from "react";
 
-const Flashcard = ({ word, showAnswer, handleShowAnswer }) => {
-  const [chineseInput, setChineseInput] = useState('');
-  const [pinyinInput, setPinyinInput] = useState('');
-  const [correctAnswer, setCorrectAnswer] = useState(false);
+const hanziConfig = {
+  width: 100,
+  height: 100,
+  padding: 5,
+  showOutline: false,
+  showCharacter: false,
+  showHintAfterMisses: 1,
+  strokeAnimationSpeed: 1,
+  delayBetweenStrokes: 1,
+  delayBetweenLoops: 1000,
+};
+
+const Flashdiv = ({ word, showAnswer, handleShowAnswer }) => {
+  const [hanziInput, setHanziInput] = useState("");
+  const [pinyinInput, setPinyinInput] = useState("");
+  const [isCorrect, setIsCorrect] = useState(false);
+
+  const hanziWriterRef = useRef();
+
+  useEffect(() => {
+    if (hanziWriterRef.current && word["汉字"]) {
+      hanziWriterRef.current.innerHTML = ""; // Clear previous drawings
+      const currentWord = word["汉字"];
+      for (let i = 0; i < currentWord.length; i++) {
+        const charDiv = document.createElement("div");
+        charDiv.style.display = "inline-block";
+        charDiv.style.border = "1px solid black";
+        charDiv.style.margin = "5px";
+        hanziWriterRef.current.appendChild(charDiv);
+        HanziWriter.create(charDiv, currentWord[i], hanziConfig).quiz({
+          onComplete: () => {
+            setHanziInput(currentWord);
+          },
+        });
+      }
+    }
+  }, [word]);
 
   const checkAnswer = () => {
+    const currentWord = word["汉字"];
+
     if (
-      chineseInput.trim().toLowerCase() === word['汉语'].toLowerCase() &&
-      pinyinInput.trim().toLowerCase() === word['pinyin'].toLowerCase()
+      hanziInput.trim().toLowerCase() === currentWord.toLowerCase() &&
+      pinyinInput.trim().toLowerCase() === word["pinyin"].toLowerCase()
     ) {
-      setCorrectAnswer(true);
+      setIsCorrect(true);
     } else {
-      setCorrectAnswer(false);
+      setIsCorrect(false);
     }
+
     handleShowAnswer();
   };
 
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === 'Enter') {
-        checkAnswer();
-      }
-    };
-
-    document.addEventListener('keypress', handleKeyPress);
-    return () => {
-      document.removeEventListener('keypress', handleKeyPress);
-    };
-  }, [chineseInput, pinyinInput, handleShowAnswer]);
-
   return (
-    <Card className="flashcard">
-      <Card.Body>
-        <Card.Text className="text">汉语 (Hán tự): {showAnswer ? word['汉语'] : '******'}</Card.Text>
-        <Card.Text className="text">Pinyin (phiên âm): {showAnswer ? word['pinyin'] : '******'}</Card.Text>
-        <Card.Text className="text">Chữ HÁN: {word['chữ hán']}</Card.Text>
-        <Card.Text className="text">Nghĩa: {word['nghĩa']}</Card.Text>
-        <Card.Text className="text">Ví dụ: {showAnswer ? word['ví dụ'] : '******'}</Card.Text>
+    <div>
+      <div>
+        <p>汉字 (Hán tự): {showAnswer ? word["汉字"] : "******"}</p>
+        <p>Pinyin (phiên âm): {showAnswer ? word["pinyin"] : "******"}</p>
+        <p>Chữ HÁN: {word["chữ hán"]}</p>
+        <p>Nghĩa: {word["nghĩa"]}</p>
+        <p>Ví dụ: {showAnswer ? word["ví dụ"] : "******"}</p>
+        <div ref={hanziWriterRef} />
+
         {!showAnswer && (
           <>
-            <hr className="divider" />
-            <Form.Group>
-              <Form.Label>汉语 (Hán tự):</Form.Label>
-              <Form.Control
-                className="input"
+            <hr />
+            <div>
+              <label>汉字 (Hán tự):</label>
+              <input
                 type="text"
-                value={chineseInput}
+                value={hanziInput}
                 autoFocus
-                onChange={(e) => setChineseInput(e.target.value)}
+                onChange={(e) => setHanziInput(e.target.value)}
               />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Pinyin (phiên âm):</Form.Label>
-              <Form.Control
-                className="input"
+            </div>
+            <div>
+              <label>Pinyin (phiên âm):</label>
+              <input
                 type="text"
                 value={pinyinInput}
                 onChange={(e) => setPinyinInput(e.target.value)}
               />
-            </Form.Group>
-            <Button className="button" onClick={checkAnswer}>Kiểm tra</Button>
+            </div>
+            <button onClick={checkAnswer} autoFocus>
+              ✅ or ❌
+            </button>
           </>
         )}
+
         {showAnswer && (
-          <Card.Text className="feedback">
-            {correctAnswer ? '✅ Đúng! 💯' : `❌ Sai! - ${word['汉语']} - ${word['pinyin']}`}
-          </Card.Text>
+          <p>
+            {isCorrect
+              ? "✅ Đúng! 💯"
+              : `❌ Sai! - ${word["汉字"]} - ${word["pinyin"]}`}
+          </p>
         )}
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };
 
-export default Flashcard;
+export default Flashdiv;

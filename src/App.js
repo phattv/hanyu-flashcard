@@ -1,7 +1,6 @@
 import axios from 'axios';
 import Papa from 'papaparse';
 import React, { useEffect, useState } from 'react';
-import { Button, Container } from 'react-bootstrap';
 import Flashcard from './components/Flashcard';
 
 const SOURCE =
@@ -32,19 +31,6 @@ function App() {
       });
   }, []);
 
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === ' ' || event.key === 'r') {
-        randomizeWord();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyPress);
-    return () => {
-      document.removeEventListener('keydown', handleKeyPress);
-    };
-  }, []);
-
   const randomizeWord = () => {
     let newIndex;
     do {
@@ -60,8 +46,7 @@ function App() {
   };
 
   return (
-    <Container>
-      <a target="_blank" href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing">chỉnh sửa</a>
+    <div>
       {words.length > 0 && randomIndex !== null && (
         <Flashcard
           word={words[randomIndex]}
@@ -69,8 +54,10 @@ function App() {
           handleShowAnswer={handleShowAnswer}
         />
       )}
-      <Button onClick={randomizeWord}>Next</Button>
-    </Container>
+      <button onClick={randomizeWord}>➡️</button>
+      <hr />
+      <a target="_blank" href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing">chỉnh sửa</a>
+    </div>
   );
 }
 
