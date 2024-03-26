@@ -4,8 +4,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSpeechSynthesis } from "react-speech-kit";
 
 const hanziConfig = {
-  width: 100,
-  height: 100,
+  width: 200,
+  height: 200,
   padding: 5,
   showOutline: false,
   showCharacter: false,
@@ -19,15 +19,15 @@ const createSvgBackground = () => {
   const svgNS = "http://www.w3.org/2000/svg";
 
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", "100");
-  svg.setAttribute("height", "100");
+  svg.setAttribute("width", "200");
+  svg.setAttribute("height", "200");
 
   // Lines to be drawn on the SVG
   const lines = [
-    { x1: "0", y1: "0", x2: "100", y2: "100" },
-    { x1: "100", y1: "0", x2: "0", y2: "100" },
-    { x1: "50", y1: "0", x2: "50", y2: "100" },
-    { x1: "0", y1: "50", x2: "100", y2: "50" },
+    { x1: "0", y1: "0", x2: "200", y2: "200" },
+    { x1: "200", y1: "0", x2: "0", y2: "200" },
+    { x1: "100", y1: "0", x2: "100", y2: "200" },
+    { x1: "0", y1: "100", x2: "200", y2: "100" },
   ];
 
   lines.forEach(({ x1, y1, x2, y2 }) => {
@@ -48,7 +48,7 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
   const [pinyinInput, setPinyinInput] = useState("");
   const [isCorrect, setIsCorrect] = useState(false);
   const { speak, voices } = useSpeechSynthesis();
-  const voice = voices[173];
+  const voice = voices.find((voice) => voice.lang === "zh-CN");
 
   const hanziWriterRef = useRef();
 
