@@ -44,16 +44,18 @@ const createSvgBackground = () => {
 const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
   const [hanziInput, setHanziInput] = useState("");
   const [pinyinInput, setPinyinInput] = useState("");
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [isHanziCorrect, setIsHanziCorrect] = useState(false);
+  const [isPinyinCorrect, setIsPinyinCorrect] = useState(false);
+
   const synth = window.speechSynthesis;
   const voice = synth.getVoices().find((voice) => voice.lang === "zh-CN");
-
   const hanziWriterRef = useRef();
 
-  useEffect(() => {
+  const generateHanziWriter = (word, shouldAnimate) => {
     if (hanziWriterRef.current && word["汉字"]) {
       hanziWriterRef.current.innerHTML = "";
       const currentWord = word["汉字"];
+
       for (let i = 0; i < currentWord.length; i++) {
         const hanziContainer = document.createElement("div");
         hanziContainer.style.display = "inline-block";
@@ -75,13 +77,23 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
         hanziContainer.appendChild(charDiv);
         hanziWriterRef.current.appendChild(hanziContainer);
 
-        HanziWriter.create(charDiv, currentWord[i], hanziConfig).quiz({
-          onComplete: () => {
-            setHanziInput(currentWord);
-          },
-        });
+        const writer = HanziWriter.create(charDiv, currentWord[i], hanziConfig);
+
+        if (shouldAnimate) {
+          writer.loopCharacterAnimation();
+        } else {
+          writer.quiz({
+            onComplete: () => {
+              setHanziInput(currentWord);
+            },
+          });
+        }
       }
     }
+  };
+
+  useEffect(() => {
+    generateHanziWriter(word, false);
   }, [word]);
 
   const speakText = (text) => {
@@ -92,19 +104,17 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
   };
 
   const checkAnswer = () => {
-    const currentWord = word["汉字"];
-
-    if (
-      hanziInput.trim().toLowerCase() === currentWord.toLowerCase() &&
-      pinyinInput.trim().toLowerCase() === word["pinyin"].toLowerCase()
-    ) {
-      setIsCorrect(true);
+    const hanziCorrect = hanziInput.trim() === word["汉字"];
+    const pinyinCorrect = pinyinInput.trim() === word["pinyin"];
+    if (hanziCorrect && pinyinCorrect) {
       Math.random() < 0.5 ? speakText("很好") : speakText("好了");
     } else {
-      setIsCorrect(false);
       speakText("加油");
     }
 
+    generateHanziWriter(word, true);
+    setIsHanziCorrect(hanziCorrect);
+    setIsPinyinCorrect(pinyinCorrect);
     setHanziInput("");
     setPinyinInput("");
     handleShowAnswer();
@@ -118,45 +128,50 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
             <div ref={hanziWriterRef} />
           </Stack>
           <Stack flex={1} gap="xs">
-            <Text>汉字 (Hán tự): {showAnswer ? word["汉字"] : "******"}</Text>
-            <Text>
-              Pinyin (phiên âm): {showAnswer ? word["pinyin"] : "******"}
-            </Text>
-            <Text>Chữ HÁN: {word["chữ hán"]}</Text>
+            <Text>Ví dụ: {word["ví dụ"] || "-"}</Text>
+            <Text>Chữ HÁN: {word["chữ hán"] || "-"}</Text>
             <Text>Nghĩa: {word["nghĩa"]}</Text>
-            <Text>Ví dụ: {showAnswer ? word["ví dụ"] : "******"}</Text>
           </Stack>
         </Group>
       </Card.Section>
 
-      {!showAnswer && (
-        <Card.Section>
-          <Group mt="xs">
-            <TextInput
-              flex={1}
-              label="汉字 (Hán tự)"
-              value={hanziInput}
-              onChange={(e) => setHanziInput(e.target.value)}
-            />
-            <TextInput
-              flex={1}
-              label="Pinyin (phiên âm)"
-              value={pinyinInput}
-              onChange={(e) => setPinyinInput(e.target.value)}
-            />
-          </Group>
-          <Group mt="xs">
-            <Button flex={1} onClick={() => speakText(word["汉字"])}>
-              🔊
-            </Button>
-            <Button flex={1} onClick={checkAnswer} autoFocus>
-              👌
-            </Button>
-          </Group>
-        </Card.Section>
-      )}
-
-      {showAnswer && <Text>{isCorrect ? "✅ Đúng! 💯" : `❌ Sai!`}</Text>}
+      <Card.Section>
+        <Group mt="xs">
+          <TextInput
+            flex={1}
+            label="汉字 (Hán tự)"
+            error={!isHanziCorrect && showAnswer}
+            disabled={showAnswer}
+            value={showAnswer ? word["汉字"] : hanziInput}
+            onChange={(e) => setHanziInput(e.target.value)}
+          />
+          <TextInput
+            flex={1}
+            label="Pinyin (phiên âm)"
+            error={!isPinyinCorrect && showAnswer}
+            disabled={showAnswer}
+            value={showAnswer ? word["pinyin"] : pinyinInput}
+            onChange={(e) => setPinyinInput(e.target.value)}
+          />
+        </Group>
+        <Group mt="xs">
+          <Button flex={1} onClick={() => speakText(word["汉字"])}>
+            Phát âm&nbsp;🔊
+          </Button>
+          <Button
+            flex={1}
+            disabled={showAnswer}
+            onClick={checkAnswer}
+            autoFocus
+          >
+            {showAnswer
+              ? isHanziCorrect & isPinyinCorrect
+                ? "✅ Đúng! 💯"
+                : `❌ Sai!`
+              : `Kiểm tra 👌`}
+          </Button>
+        </Group>
+      </Card.Section>
     </Card>
   );
 };

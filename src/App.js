@@ -10,7 +10,8 @@ const SOURCE =
 
 function App() {
   const [words, setWords] = useState([]);
-  const [randomIndex, setRandomIndex] = useState(null);
+  const [usedIndices, setUsedIndices] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [totalWords, setTotalWords] = useState(0);
@@ -38,35 +39,43 @@ function App() {
   }, []);
 
   const randomizeWord = () => {
+    if (usedIndices.length === totalWords) {
+      // If all words have been shown, reset the used indices array
+      setUsedIndices([]);
+      setAnsweredCount(0);
+    }
+
     let newIndex;
     do {
-      newIndex = Math.floor(Math.random() * words.length);
-    } while (newIndex === randomIndex);
+      newIndex = Math.floor(Math.random() * totalWords);
+    } while (usedIndices.includes(newIndex));
 
-    setRandomIndex(newIndex);
+    setUsedIndices([...usedIndices, newIndex]);
+    setCurrentIndex(newIndex);
     setShowAnswer(false);
+    setAnsweredCount(answeredCount + 1);
   };
 
   const handleShowAnswer = () => {
     setShowAnswer(true);
-    setAnsweredCount(answeredCount + 1);
   };
 
   return (
     <div>
-      {words.length > 0 && randomIndex !== null && (
+      {words.length > 0 && currentIndex !== null && (
         <Flashcard
-          word={words[randomIndex]}
+          word={words[currentIndex]}
           showAnswer={showAnswer}
           handleShowAnswer={handleShowAnswer}
         />
       )}
       <Button mt="xs" mb="xs" fullWidth onClick={randomizeWord}>
-        ➡️
+        Tiếp theo&nbsp;➡️
       </Button>
       <Text>
         Đã trả lời: {answeredCount} / {totalWords} &nbsp;
         <a
+          rel="noreferrer noopener"
           target="_blank"
           href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
         >
