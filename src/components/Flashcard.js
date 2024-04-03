@@ -1,4 +1,5 @@
 import { Button, Card, Group, Stack, Text, TextInput } from "@mantine/core";
+import { motion } from "framer-motion";
 import HanziWriter from "hanzi-writer";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -123,61 +124,68 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
   };
 
   return (
-    <Card>
-      <Card.Section>
-        <Group>
-          <Stack flex={1} gap="xs">
-            <div ref={hanziWriterRef} />
-          </Stack>
-          <Stack flex={1} gap="xs">
-            <Text>Ví dụ: {word["ví dụ"] || "-"}</Text>
-            <Text>Chữ HÁN: {word["chữ hán"] || "-"}</Text>
-            <Text>Nghĩa: {word["nghĩa"]}</Text>
-          </Stack>
-        </Group>
-      </Card.Section>
+    <motion.div
+      initial={{ opacity: 0, x: "100%" }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: "-100%" }}
+      transition={{ duration: 0.5, ease: "backInOut" }}
+    >
+      <Card>
+        <Card.Section>
+          <Group>
+            <Stack flex={1} gap="xs">
+              <div ref={hanziWriterRef} />
+            </Stack>
+            <Stack flex={1} gap="xs">
+              <Text>Ví dụ: {word["ví dụ"] || "-"}</Text>
+              <Text>Chữ HÁN: {word["chữ hán"] || "-"}</Text>
+              <Text>Nghĩa: {word["nghĩa"]}</Text>
+            </Stack>
+          </Group>
+        </Card.Section>
 
-      <Card.Section>
-        <form onSubmit={checkAnswer}>
-          <Group mt="xs">
-            <TextInput
-              flex={1}
-              label="汉字 (Hán tự)"
-              error={isAnswerShown && !isHanziCorrect}
-              disabled={isAnswerShown}
-              value={isAnswerShown ? currentHanzi : hanziInput}
-              onChange={(e) => setHanziInput(e.target.value)}
-            />
-            <TextInput
-              flex={1}
-              label="Pinyin (phiên âm)"
-              error={isAnswerShown && !isPinyinCorrect}
-              disabled={isAnswerShown}
-              value={isAnswerShown ? currentPinyin : pinyinInput}
-              onChange={(e) => setPinyinInput(e.target.value)}
-            />
-          </Group>
-          <Group mt="xs">
-            <Button flex={1} onClick={() => speakText(currentHanzi)}>
-              Phát âm&nbsp;🔊
-            </Button>
-            <Button
-              flex={1}
-              type="submit"
-              disabled={isAnswerShown}
-              onClick={checkAnswer}
-              autoFocus
-            >
-              {isAnswerShown
-                ? isHanziCorrect & isPinyinCorrect
-                  ? "Đúng! 👍"
-                  : `Sai! 👎`
-                : `Kiểm tra 👌`}
-            </Button>
-          </Group>
-        </form>
-      </Card.Section>
-    </Card>
+        <Card.Section>
+          <form onSubmit={checkAnswer}>
+            <Group mt="xs">
+              <TextInput
+                flex={1}
+                label="汉字 (Hán tự)"
+                error={isAnswerShown && !isHanziCorrect}
+                disabled={isAnswerShown}
+                value={isAnswerShown ? currentHanzi : hanziInput}
+                onChange={(e) => setHanziInput(e.target.value)}
+              />
+              <TextInput
+                flex={1}
+                label="Pinyin (phiên âm)"
+                error={isAnswerShown && !isPinyinCorrect}
+                disabled={isAnswerShown}
+                value={isAnswerShown ? currentPinyin : pinyinInput}
+                onChange={(e) => setPinyinInput(e.target.value)}
+              />
+            </Group>
+            <Group mt="xs">
+              <Button flex={1} onClick={() => speakText(currentHanzi)}>
+                Phát âm&nbsp;🔊
+              </Button>
+              <Button
+                flex={1}
+                type="submit"
+                disabled={isAnswerShown}
+                onClick={checkAnswer}
+                autoFocus
+              >
+                {isAnswerShown
+                  ? isHanziCorrect & isPinyinCorrect
+                    ? "Đúng! 👍"
+                    : `Sai! 👎`
+                  : `Kiểm tra 👌`}
+              </Button>
+            </Group>
+          </form>
+        </Card.Section>
+      </Card>
+    </motion.div>
   );
 };
 

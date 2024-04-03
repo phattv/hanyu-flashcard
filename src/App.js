@@ -136,6 +136,7 @@ function App() {
     <Container>
       {words.length > 0 && currentIndex !== null && (
         <Flashcard
+          key={currentIndex}
           word={words[currentIndex]}
           isAnswerShown={isAnswerShown}
           handleShowAnswer={handleShowAnswer}
