@@ -96,7 +96,7 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
 
   useEffect(() => {
     generateHanziWriter(false);
-  }, [word]);
+  });
 
   const speakText = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);

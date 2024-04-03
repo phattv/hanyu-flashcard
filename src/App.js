@@ -69,7 +69,7 @@ function App() {
     totalWords,
   ]);
 
-  useEffect(() => {
+  const refreshData = () => {
     axios
       .get(SOURCE)
       .then((response) => {
@@ -89,21 +89,21 @@ function App() {
       .catch((error) => {
         console.error("Error fetching data: ", error);
       });
+  };
+
+  useEffect(() => {
+    refreshData();
   }, []);
 
   const randomizeWord = () => {
     if (usedIndices.length === totalWords) {
-      // If all words have been shown, reset the used indices array
-      setUsedIndices([]);
-      setCorrectCount(0);
-      setIncorrectCount(0);
+      reset();
     }
 
     let newIndex;
     do {
       newIndex = Math.floor(Math.random() * totalWords);
     } while (usedIndices.includes(newIndex));
-
     setUsedIndices([...usedIndices, newIndex]);
     setCurrentIndex(newIndex);
 
@@ -120,6 +120,16 @@ function App() {
     } else {
       setIncorrectCount(incorrectCount + 1);
     }
+  };
+
+  const reset = () => {
+    refreshData();
+    setUsedIndices([]);
+    setCurrentIndex(null);
+    setIsAnswerShown(false);
+    setCanNext(true);
+    setCorrectCount(0);
+    setIncorrectCount(0);
   };
 
   return (
@@ -147,13 +157,21 @@ function App() {
         </Text>
         <Text>{incorrectCount} 👎</Text>
       </Group>
-      <a
-        rel="noreferrer noopener"
-        target="_blank"
-        href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
-      >
-        chỉnh sửa
-      </a>
+      <Group>
+        <Button
+          flex={1}
+          component="a"
+          rel="noreferrer noopener"
+          target="_blank"
+          href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
+          variant="subtle"
+        >
+          Chỉnh sửa
+        </Button>
+        <Button flex={1} onClick={reset} variant="subtle">
+          Bắt đầu lại
+        </Button>
+      </Group>
     </Container>
   );
 }
