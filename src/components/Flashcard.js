@@ -1,7 +1,7 @@
 import { Button, Card, Group, Stack, Text, TextInput } from "@mantine/core";
 import { motion } from "framer-motion";
 import HanziWriter from "hanzi-writer";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const hanziConfig = {
   width: 150,
@@ -54,50 +54,56 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
   const voice = synth.getVoices().find((voice) => voice.lang === "zh-CN");
   const hanziWriterRef = useRef();
 
-  const generateHanziWriter = (shouldAnimate) => {
-    if (hanziWriterRef.current && currentHanzi) {
-      hanziWriterRef.current.innerHTML = "";
-      const currentWord = currentHanzi;
+  const generateHanziWriter = useCallback(
+    (shouldAnimate) => {
+      if (hanziWriterRef.current && currentHanzi) {
+        hanziWriterRef.current.innerHTML = "";
 
-      for (let i = 0; i < currentWord.length; i++) {
-        const hanziContainer = document.createElement("div");
-        hanziContainer.style.display = "inline-block";
-        hanziContainer.style.position = "relative";
-        hanziContainer.style.width = `${hanziConfig.width}px`;
-        hanziContainer.style.height = `${hanziConfig.height}px`;
-        hanziContainer.style.border = "1px solid #DDD";
+        for (let i = 0; i < currentHanzi.length; i++) {
+          const hanziContainer = document.createElement("div");
+          hanziContainer.style.display = "inline-block";
+          hanziContainer.style.position = "relative";
+          hanziContainer.style.width = `${hanziConfig.width}px`;
+          hanziContainer.style.height = `${hanziConfig.height}px`;
+          hanziContainer.style.border = "1px solid #DDD";
 
-        const svgBackground = createSvgBackground();
-        hanziContainer.appendChild(svgBackground);
+          const svgBackground = createSvgBackground();
+          hanziContainer.appendChild(svgBackground);
 
-        const charDiv = document.createElement("div");
-        charDiv.style.position = "absolute";
-        charDiv.style.top = "0";
-        charDiv.style.left = "0";
-        charDiv.style.width = "100%";
-        charDiv.style.height = "100%";
+          const charDiv = document.createElement("div");
+          charDiv.style.position = "absolute";
+          charDiv.style.top = "0";
+          charDiv.style.left = "0";
+          charDiv.style.width = "100%";
+          charDiv.style.height = "100%";
 
-        hanziContainer.appendChild(charDiv);
-        hanziWriterRef.current.appendChild(hanziContainer);
+          hanziContainer.appendChild(charDiv);
+          hanziWriterRef.current.appendChild(hanziContainer);
 
-        const writer = HanziWriter.create(charDiv, currentWord[i], hanziConfig);
+          const writer = HanziWriter.create(
+            charDiv,
+            currentHanzi[i],
+            hanziConfig
+          );
 
-        if (shouldAnimate) {
-          writer.loopCharacterAnimation();
-        } else {
-          writer.quiz({
-            onComplete: () => {
-              setHanziInput(currentWord);
-            },
-          });
+          if (shouldAnimate) {
+            writer.loopCharacterAnimation();
+          } else {
+            writer.quiz({
+              onComplete: () => {
+                setHanziInput(currentHanzi);
+              },
+            });
+          }
         }
       }
-    }
-  };
+    },
+    [currentHanzi]
+  );
 
   useEffect(() => {
     generateHanziWriter(false);
-  });
+  }, [word, generateHanziWriter]);
 
   const speakText = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
