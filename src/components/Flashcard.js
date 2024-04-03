@@ -41,7 +41,7 @@ const createSvgBackground = () => {
   return svg;
 };
 
-const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
+const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
   const [hanziInput, setHanziInput] = useState("");
   const [pinyinInput, setPinyinInput] = useState("");
   const [isHanziCorrect, setIsHanziCorrect] = useState(false);
@@ -117,7 +117,7 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
     setIsPinyinCorrect(pinyinCorrect);
     setHanziInput("");
     setPinyinInput("");
-    handleShowAnswer();
+    handleShowAnswer(hanziCorrect && pinyinCorrect);
   };
 
   return (
@@ -140,17 +140,17 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
           <TextInput
             flex={1}
             label="汉字 (Hán tự)"
-            error={!isHanziCorrect && showAnswer}
-            disabled={showAnswer}
-            value={showAnswer ? word["汉字"] : hanziInput}
+            error={isAnswerShown && !isHanziCorrect}
+            disabled={isAnswerShown}
+            value={isAnswerShown ? word["汉字"] : hanziInput}
             onChange={(e) => setHanziInput(e.target.value)}
           />
           <TextInput
             flex={1}
             label="Pinyin (phiên âm)"
-            error={!isPinyinCorrect && showAnswer}
-            disabled={showAnswer}
-            value={showAnswer ? word["pinyin"] : pinyinInput}
+            error={isAnswerShown && !isPinyinCorrect}
+            disabled={isAnswerShown}
+            value={isAnswerShown ? word["pinyin"] : pinyinInput}
             onChange={(e) => setPinyinInput(e.target.value)}
           />
         </Group>
@@ -160,14 +160,14 @@ const FlashCard = ({ word, showAnswer, handleShowAnswer }) => {
           </Button>
           <Button
             flex={1}
-            disabled={showAnswer}
+            disabled={isAnswerShown}
             onClick={checkAnswer}
             autoFocus
           >
-            {showAnswer
+            {isAnswerShown
               ? isHanziCorrect & isPinyinCorrect
-                ? "✅ Đúng! 💯"
-                : `❌ Sai!`
+                ? "Đúng! 👍"
+                : `Sai! 👎`
               : `Kiểm tra 👌`}
           </Button>
         </Group>

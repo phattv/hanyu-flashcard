@@ -1,4 +1,4 @@
-import { Button, Text } from "@mantine/core";
+import { Button, Container, Group, Text } from "@mantine/core";
 import "@mantine/core/styles.css";
 import axios from "axios";
 import Papa from "papaparse";
@@ -12,8 +12,11 @@ function App() {
   const [words, setWords] = useState([]);
   const [usedIndices, setUsedIndices] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(null);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [answeredCount, setAnsweredCount] = useState(0);
+
+  const [isAnswerShown, setIsAnswerShown] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCount, setIncorrectCount] = useState(0);
   const [totalWords, setTotalWords] = useState(0);
 
   useEffect(() => {
@@ -42,7 +45,8 @@ function App() {
     if (usedIndices.length === totalWords) {
       // If all words have been shown, reset the used indices array
       setUsedIndices([]);
-      setAnsweredCount(0);
+      setCorrectCount(0);
+      setIncorrectCount(0);
     }
 
     let newIndex;
@@ -52,37 +56,55 @@ function App() {
 
     setUsedIndices([...usedIndices, newIndex]);
     setCurrentIndex(newIndex);
-    setShowAnswer(false);
-    setAnsweredCount(answeredCount + 1);
+
+    setIsAnswerShown(false);
+    setCanNext(false);
   };
 
-  const handleShowAnswer = () => {
-    setShowAnswer(true);
+  const handleShowAnswer = (result) => {
+    setIsAnswerShown(true);
+    setCanNext(true);
+
+    if (result) {
+      setCorrectCount(correctCount + 1);
+    } else {
+      setIncorrectCount(incorrectCount + 1);
+    }
   };
 
   return (
-    <div>
+    <Container>
       {words.length > 0 && currentIndex !== null && (
         <Flashcard
           word={words[currentIndex]}
-          showAnswer={showAnswer}
+          isAnswerShown={isAnswerShown}
           handleShowAnswer={handleShowAnswer}
         />
       )}
-      <Button mt="xs" mb="xs" fullWidth onClick={randomizeWord}>
+      <Button
+        mt="xs"
+        mb="xs"
+        fullWidth
+        onClick={randomizeWord}
+        disabled={!canNext}
+      >
         Tiếp theo&nbsp;➡️
       </Button>
-      <Text>
-        Đã trả lời: {answeredCount} / {totalWords} &nbsp;
-        <a
-          rel="noreferrer noopener"
-          target="_blank"
-          href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
-        >
-          chỉnh sửa
-        </a>
-      </Text>
-    </div>
+      <Group justify="space-around">
+        <Text>{correctCount} 👍</Text>
+        <Text>
+          {correctCount + incorrectCount + 1} / {totalWords}
+        </Text>
+        <Text>{incorrectCount} 👎</Text>
+      </Group>
+      <a
+        rel="noreferrer noopener"
+        target="_blank"
+        href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
+      >
+        chỉnh sửa
+      </a>
+    </Container>
   );
 }
 
