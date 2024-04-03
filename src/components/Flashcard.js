@@ -42,6 +42,8 @@ const createSvgBackground = () => {
 };
 
 const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
+  const currentHanzi = word["汉字"];
+  const currentPinyin = word["pinyin"];
   const [hanziInput, setHanziInput] = useState("");
   const [pinyinInput, setPinyinInput] = useState("");
   const [isHanziCorrect, setIsHanziCorrect] = useState(false);
@@ -51,10 +53,10 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
   const voice = synth.getVoices().find((voice) => voice.lang === "zh-CN");
   const hanziWriterRef = useRef();
 
-  const generateHanziWriter = (word, shouldAnimate) => {
-    if (hanziWriterRef.current && word["汉字"]) {
+  const generateHanziWriter = (shouldAnimate) => {
+    if (hanziWriterRef.current && currentHanzi) {
       hanziWriterRef.current.innerHTML = "";
-      const currentWord = word["汉字"];
+      const currentWord = currentHanzi;
 
       for (let i = 0; i < currentWord.length; i++) {
         const hanziContainer = document.createElement("div");
@@ -93,7 +95,7 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
   };
 
   useEffect(() => {
-    generateHanziWriter(word, false);
+    generateHanziWriter(false);
   }, [word]);
 
   const speakText = (text) => {
@@ -104,15 +106,15 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
   };
 
   const checkAnswer = () => {
-    const hanziCorrect = hanziInput.trim() === word["汉字"];
-    const pinyinCorrect = pinyinInput.trim() === word["pinyin"];
+    const hanziCorrect = hanziInput.trim() === currentHanzi;
+    const pinyinCorrect = pinyinInput.trim() === currentPinyin;
     if (hanziCorrect && pinyinCorrect) {
       Math.random() < 0.5 ? speakText("很好") : speakText("好了");
     } else {
       speakText("加油");
     }
 
-    generateHanziWriter(word, true);
+    generateHanziWriter(true);
     setIsHanziCorrect(hanziCorrect);
     setIsPinyinCorrect(pinyinCorrect);
     setHanziInput("");
@@ -136,41 +138,44 @@ const FlashCard = ({ word, isAnswerShown, handleShowAnswer }) => {
       </Card.Section>
 
       <Card.Section>
-        <Group mt="xs">
-          <TextInput
-            flex={1}
-            label="汉字 (Hán tự)"
-            error={isAnswerShown && !isHanziCorrect}
-            disabled={isAnswerShown}
-            value={isAnswerShown ? word["汉字"] : hanziInput}
-            onChange={(e) => setHanziInput(e.target.value)}
-          />
-          <TextInput
-            flex={1}
-            label="Pinyin (phiên âm)"
-            error={isAnswerShown && !isPinyinCorrect}
-            disabled={isAnswerShown}
-            value={isAnswerShown ? word["pinyin"] : pinyinInput}
-            onChange={(e) => setPinyinInput(e.target.value)}
-          />
-        </Group>
-        <Group mt="xs">
-          <Button flex={1} onClick={() => speakText(word["汉字"])}>
-            Phát âm&nbsp;🔊
-          </Button>
-          <Button
-            flex={1}
-            disabled={isAnswerShown}
-            onClick={checkAnswer}
-            autoFocus
-          >
-            {isAnswerShown
-              ? isHanziCorrect & isPinyinCorrect
-                ? "Đúng! 👍"
-                : `Sai! 👎`
-              : `Kiểm tra 👌`}
-          </Button>
-        </Group>
+        <form onSubmit={checkAnswer}>
+          <Group mt="xs">
+            <TextInput
+              flex={1}
+              label="汉字 (Hán tự)"
+              error={isAnswerShown && !isHanziCorrect}
+              disabled={isAnswerShown}
+              value={isAnswerShown ? currentHanzi : hanziInput}
+              onChange={(e) => setHanziInput(e.target.value)}
+            />
+            <TextInput
+              flex={1}
+              label="Pinyin (phiên âm)"
+              error={isAnswerShown && !isPinyinCorrect}
+              disabled={isAnswerShown}
+              value={isAnswerShown ? currentPinyin : pinyinInput}
+              onChange={(e) => setPinyinInput(e.target.value)}
+            />
+          </Group>
+          <Group mt="xs">
+            <Button flex={1} onClick={() => speakText(currentHanzi)}>
+              Phát âm&nbsp;🔊
+            </Button>
+            <Button
+              flex={1}
+              type="submit"
+              disabled={isAnswerShown}
+              onClick={checkAnswer}
+              autoFocus
+            >
+              {isAnswerShown
+                ? isHanziCorrect & isPinyinCorrect
+                  ? "Đúng! 👍"
+                  : `Sai! 👎`
+                : `Kiểm tra 👌`}
+            </Button>
+          </Group>
+        </form>
       </Card.Section>
     </Card>
   );
