@@ -1,12 +1,9 @@
-import { Button, Container, Group, Text } from "@mantine/core";
+import { Text } from "@mantine/core";
 import "@mantine/core/styles.css";
 import axios from "axios";
 import Papa from "papaparse";
-import { useEffect, useState } from "react";
-import Flashcard from "./components/Flashcard";
-
-const SOURCE =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzOh48B6TCcx3ExlqzXs9Dcf7Z4792Q8IhJzE_uAd3hCx_-VF-o9DWwdJVcOaNqeE4hHlvSO9l4MOt/pub?gid=0&single=true&output=csv";
+import { useEffect, useRef, useState } from "react";
+import { generateHanziWriter, source } from "./constants";
 
 function App() {
   const [words, setWords] = useState(() => {
@@ -21,57 +18,38 @@ function App() {
 
   const [currentIndex, setCurrentIndex] = useState(() => {
     const savedCurrentIndex = localStorage.getItem("currentIndex");
-    return savedCurrentIndex !== null ? JSON.parse(savedCurrentIndex) : null;
+    return savedCurrentIndex !== null ? JSON.parse(savedCurrentIndex) : 0;
   });
 
-  const [isAnswerShown, setIsAnswerShown] = useState(() => {
-    const savedIsAnswerShown = localStorage.getItem("isAnswerShown");
-    return savedIsAnswerShown ? JSON.parse(savedIsAnswerShown) : false;
+  const [isCorrect, setIsCorrect] = useState(() => {
+    const savedIsCorrect = localStorage.getItem("isCorrect");
+    return savedIsCorrect !== null ? JSON.parse(savedIsCorrect) : false;
   });
 
-  const [canNext, setCanNext] = useState(() => {
-    const savedCanNext = localStorage.getItem("canNext");
-    return savedCanNext ? JSON.parse(savedCanNext) : true;
-  });
-
-  const [correctCount, setCorrectCount] = useState(() => {
-    const savedCorrectCount = localStorage.getItem("correctCount");
-    return savedCorrectCount ? JSON.parse(savedCorrectCount) : 0;
-  });
-
-  const [incorrectCount, setIncorrectCount] = useState(() => {
-    const savedIncorrectCount = localStorage.getItem("incorrectCount");
-    return savedIncorrectCount ? JSON.parse(savedIncorrectCount) : 0;
-  });
-
-  const [totalWords, setTotalWords] = useState(() => {
-    const savedTotalWords = localStorage.getItem("totalWords");
-    return savedTotalWords ? JSON.parse(savedTotalWords) : 0;
-  });
+  const hanziWriterRef = useRef();
 
   useEffect(() => {
     localStorage.setItem("words", JSON.stringify(words));
     localStorage.setItem("usedIndices", JSON.stringify(usedIndices));
     localStorage.setItem("currentIndex", JSON.stringify(currentIndex));
-    localStorage.setItem("isAnswerShown", JSON.stringify(isAnswerShown));
-    localStorage.setItem("canNext", JSON.stringify(canNext));
-    localStorage.setItem("correctCount", JSON.stringify(correctCount));
-    localStorage.setItem("incorrectCount", JSON.stringify(incorrectCount));
-    localStorage.setItem("totalWords", JSON.stringify(totalWords));
-  }, [
-    words,
-    usedIndices,
-    currentIndex,
-    isAnswerShown,
-    canNext,
-    correctCount,
-    incorrectCount,
-    totalWords,
-  ]);
+  }, [words, usedIndices, currentIndex]);
+
+  useEffect(() => {
+    generateHanziWriter(
+      hanziWriterRef,
+      words[currentIndex]["汉字"],
+      onQuizCompleted,
+      false
+    );
+  }, [words[currentIndex], currentIndex]);
+
+  useEffect(() => {
+    words?.length === 0 ? refreshData() : randomizeWord();
+  }, []);
 
   const refreshData = () => {
     axios
-      .get(SOURCE)
+      .get(source)
       .then((response) => {
         const csvData = response.data;
         Papa.parse(csvData, {
@@ -79,7 +57,7 @@ function App() {
           complete: (result) => {
             const parsedData = result.data;
             setWords(parsedData);
-            setTotalWords(parsedData.length);
+            randomizeWord();
           },
           error: (error) => {
             console.error("Error parsing CSV: ", error);
@@ -91,89 +69,70 @@ function App() {
       });
   };
 
-  useEffect(() => {
-    refreshData();
-  }, []);
-
   const randomizeWord = () => {
-    if (usedIndices.length === totalWords) {
-      reset();
-    }
+    setIsCorrect(false);
 
     let newIndex;
-    do {
-      newIndex = Math.floor(Math.random() * totalWords);
-    } while (usedIndices.includes(newIndex));
+    newIndex = Math.floor(Math.random() * words.length);
     setUsedIndices([...usedIndices, newIndex]);
-    setCurrentIndex(newIndex);
-
-    setIsAnswerShown(false);
-    setCanNext(false);
-  };
-
-  const handleShowAnswer = (result) => {
-    setIsAnswerShown(true);
-    setCanNext(true);
-
-    if (result) {
-      setCorrectCount(correctCount + 1);
-    } else {
-      setIncorrectCount(incorrectCount + 1);
+    if (usedIndices.includes(newIndex) || !words[newIndex]["pinyin"]) {
+      randomizeWord();
+      return;
     }
+    setCurrentIndex(newIndex);
   };
 
-  const reset = () => {
-    refreshData();
-    setUsedIndices([]);
-    setCurrentIndex(null);
-    setIsAnswerShown(false);
-    setCanNext(true);
-    setCorrectCount(0);
-    setIncorrectCount(0);
+  const speak = (text) => {
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "zh-CN";
+    utterance.voice = synth.getVoices().find((voice) => voice.lang === "zh-CN");
+    synth.speak(utterance);
   };
+
+  const onQuizCompleted = () => {
+    setIsCorrect(true);
+
+    const hanzis = words[currentIndex]["汉字"];
+    generateHanziWriter(hanziWriterRef, hanzis, onQuizCompleted, true);
+
+    speak(hanzis);
+
+    setTimeout(() => {
+      randomizeWord();
+    }, 3000);
+  };
+
+  if (words?.length === 0) {
+    return (
+      <div>
+        <Text align="center">Loading...</Text>
+      </div>
+    );
+  }
 
   return (
-    <Container>
-      {words.length > 0 && currentIndex !== null && (
-        <Flashcard
-          key={currentIndex}
-          word={words[currentIndex]}
-          isAnswerShown={isAnswerShown}
-          handleShowAnswer={handleShowAnswer}
-        />
+    <div>
+      <div ref={hanziWriterRef} />
+      <Text>{words[currentIndex]["chữ hán"]}</Text>
+      <Text>{words[currentIndex]["nghĩa"]}</Text>
+      {isCorrect && (
+        <>
+          <Text fw={700} size="50px">
+            {words[currentIndex]["汉字"]}
+          </Text>
+          <Text
+            fw={500}
+            size="40px"
+            color="blue"
+            onClick={() => speak(words[currentIndex]["汉字"])}
+          >
+            {words[currentIndex]["pinyin"]}
+          </Text>
+          <Text size="40px">{words[currentIndex]["ví dụ"]}</Text>
+        </>
       )}
-      <Button
-        mt="xs"
-        mb="xs"
-        fullWidth
-        onClick={randomizeWord}
-        disabled={!canNext}
-      >
-        Tiếp theo&nbsp;➡️
-      </Button>
-      <Group justify="space-around">
-        <Text>{correctCount} 👍</Text>
-        <Text>
-          {correctCount + incorrectCount + 1} / {totalWords}
-        </Text>
-        <Text>{incorrectCount} 👎</Text>
-      </Group>
-      <Group>
-        <Button
-          flex={1}
-          component="a"
-          rel="noreferrer noopener"
-          target="_blank"
-          href="https://docs.google.com/spreadsheets/d/1QxzTnhYiBzeFxrF93FIrAyRAu9OeuiSDylt5gB4b2Ik/edit?usp=sharing"
-          variant="subtle"
-        >
-          Chỉnh sửa
-        </Button>
-        <Button flex={1} onClick={reset} variant="subtle">
-          Bắt đầu lại
-        </Button>
-      </Group>
-    </Container>
+    </div>
   );
 }
 
