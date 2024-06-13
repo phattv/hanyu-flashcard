@@ -6,41 +6,21 @@ import { useEffect, useRef, useState } from "react";
 import { generateHanziWriter, source } from "./constants";
 
 function App() {
-  const [words, setWords] = useState(() => {
-    const savedWords = localStorage.getItem("words");
-    return savedWords ? JSON.parse(savedWords) : [];
-  });
-
-  const [usedIndices, setUsedIndices] = useState(() => {
-    const savedUsedIndices = localStorage.getItem("usedIndices");
-    return savedUsedIndices ? JSON.parse(savedUsedIndices) : [];
-  });
-
-  const [currentIndex, setCurrentIndex] = useState(() => {
-    const savedCurrentIndex = localStorage.getItem("currentIndex");
-    return savedCurrentIndex !== null ? JSON.parse(savedCurrentIndex) : 0;
-  });
-
-  const [isCorrect, setIsCorrect] = useState(() => {
-    const savedIsCorrect = localStorage.getItem("isCorrect");
-    return savedIsCorrect !== null ? JSON.parse(savedIsCorrect) : false;
-  });
-
+  const [words, setWords] = useState([]);
+  const [usedIndices, setUsedIndices] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isCorrect, setIsCorrect] = useState(false);
   const hanziWriterRef = useRef();
 
   useEffect(() => {
-    localStorage.setItem("words", JSON.stringify(words));
-    localStorage.setItem("usedIndices", JSON.stringify(usedIndices));
-    localStorage.setItem("currentIndex", JSON.stringify(currentIndex));
-  }, [words, usedIndices, currentIndex]);
-
-  useEffect(() => {
-    generateHanziWriter(
-      hanziWriterRef,
-      words[currentIndex]["汉字"],
-      onQuizCompleted,
-      false
-    );
+    if (words[currentIndex] && words[currentIndex]["汉字"]) {
+      generateHanziWriter(
+        hanziWriterRef,
+        words[currentIndex]["汉字"],
+        onQuizCompleted,
+        false
+      );
+    }
   }, [words[currentIndex], currentIndex]);
 
   useEffect(() => {
@@ -57,7 +37,8 @@ function App() {
           complete: (result) => {
             const parsedData = result.data;
             setWords(parsedData);
-            randomizeWord();
+            setUsedIndices([]);
+            randomizeWord(parsedData);
           },
           error: (error) => {
             console.error("Error parsing CSV: ", error);
@@ -69,16 +50,20 @@ function App() {
       });
   };
 
-  const randomizeWord = () => {
+  const randomizeWord = (data = words) => {
     setIsCorrect(false);
 
-    let newIndex;
-    newIndex = Math.floor(Math.random() * words.length);
-    setUsedIndices([...usedIndices, newIndex]);
-    if (usedIndices.includes(newIndex) || !words[newIndex]["pinyin"]) {
-      randomizeWord();
+    const newIndex = Math.floor(Math.random() * data.length);
+    if (
+      usedIndices.includes(newIndex) ||
+      !data[newIndex] ||
+      !data[newIndex]["pinyin"]
+    ) {
+      randomizeWord(data);
       return;
     }
+
+    setUsedIndices((prevIndices) => [...prevIndices, newIndex]);
     setCurrentIndex(newIndex);
   };
 
@@ -95,7 +80,6 @@ function App() {
 
     const hanzis = words[currentIndex]["汉字"];
     generateHanziWriter(hanziWriterRef, hanzis, onQuizCompleted, true);
-
     speak(hanzis);
 
     setTimeout(() => {
@@ -103,7 +87,11 @@ function App() {
     }, 3000);
   };
 
-  if (words?.length === 0) {
+  if (
+    words?.length === 0 ||
+    !words[currentIndex] ||
+    !words[currentIndex]["pinyin"]
+  ) {
     return (
       <div>
         <Text align="center">Loading...</Text>
