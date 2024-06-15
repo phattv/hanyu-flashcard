@@ -1,3 +1,4 @@
+// https://hanziwriter.org/docs.html#api-link
 import HanziWriter from "hanzi-writer";
 
 const source =
