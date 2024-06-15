@@ -3,17 +3,21 @@ import HanziWriter from "hanzi-writer";
 const source =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzOh48B6TCcx3ExlqzXs9Dcf7Z4792Q8IhJzE_uAd3hCx_-VF-o9DWwdJVcOaNqeE4hHlvSO9l4MOt/pub?gid=0&single=true&output=csv";
 
-const size = 200;
+const size = 250;
 const hanziConfig = {
+  showOutline: false,
+  showCharacter: false,
   width: size,
   height: size,
   padding: 5,
-  showOutline: false,
-  showCharacter: false,
-  showHintAfterMisses: 1,
-  strokeAnimationSpeed: 3,
+  strokeAnimationSpeed: 5,
+  strokeHighlightSpeed: 2,
   delayBetweenStrokes: 0,
   delayBetweenLoops: 200,
+  radicalColor: "#178f16",
+  drawingWidth: 10,
+  showHintAfterMisses: 1,
+  highlightOnComplete: true,
 };
 
 const createSvgBackground = () => {
@@ -44,14 +48,15 @@ const createSvgBackground = () => {
 };
 
 const generateHanziWriter = (
-  hanziWriterRef,
+  ref,
   hanzis,
   onQuizCompleted,
-  shouldAnimate
+  shouldAnimate,
+  isFastMode
 ) => {
-  if (!hanziWriterRef?.current || !hanzis) return;
+  if (!ref?.current || !hanzis) return;
 
-  hanziWriterRef.current.innerHTML = "";
+  ref.current.innerHTML = "";
   let completed = 0;
   const total = hanzis.length;
   for (let i = 0; i < total; i++) {
@@ -73,12 +78,16 @@ const generateHanziWriter = (
     charDiv.style.height = "100%";
 
     hanziContainer.appendChild(charDiv);
-    hanziWriterRef.current.appendChild(hanziContainer);
+    ref.current.appendChild(hanziContainer);
 
     const writer = HanziWriter.create(charDiv, hanzis[i], hanziConfig);
 
     if (shouldAnimate) {
-      writer.loopCharacterAnimation();
+      if (isFastMode) {
+        writer.showCharacter();
+      } else {
+        writer.loopCharacterAnimation();
+      }
     } else {
       writer.quiz({
         onComplete: () => {

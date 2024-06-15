@@ -1,4 +1,4 @@
-import { Text } from "@mantine/core";
+import { Checkbox, Group, Text } from "@mantine/core";
 import "@mantine/core/styles.css";
 import axios from "axios";
 import Papa from "papaparse";
@@ -10,14 +10,16 @@ function App() {
   const [usedIndices, setUsedIndices] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
-  const hanziWriterRef = useRef();
+  const [isFastMode, setIsFastMode] = useState(false);
+  const writerRef = useRef();
 
   useEffect(() => {
     if (words[currentIndex] && words[currentIndex]["汉字"]) {
       generateHanziWriter(
-        hanziWriterRef,
+        writerRef,
         words[currentIndex]["汉字"],
         onQuizCompleted,
+        false,
         false
       );
     }
@@ -25,6 +27,14 @@ function App() {
 
   useEffect(() => {
     words?.length === 0 ? refreshData() : randomizeWord();
+
+    const unloadCallback = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", unloadCallback);
+    return () => window.removeEventListener("beforeunload", unloadCallback);
   }, []);
 
   const refreshData = () => {
@@ -35,7 +45,7 @@ function App() {
         Papa.parse(csvData, {
           header: true,
           complete: (result) => {
-            const parsedData = result.data;
+            const parsedData = result.data.filter((row) => !!row["pinyin"]);
             setWords(parsedData);
             setUsedIndices([]);
             randomizeWord(parsedData);
@@ -79,12 +89,18 @@ function App() {
     setIsCorrect(true);
 
     const hanzis = words[currentIndex]["汉字"];
-    generateHanziWriter(hanziWriterRef, hanzis, onQuizCompleted, true);
     speak(hanzis);
+    generateHanziWriter(writerRef, hanzis, onQuizCompleted, true, isFastMode);
 
-    setTimeout(() => {
-      randomizeWord();
-    }, 3000);
+    if (isFastMode) {
+      setTimeout(() => {
+        randomizeWord();
+      }, 500);
+    } else {
+      setTimeout(() => {
+        randomizeWord();
+      }, 2000);
+    }
   };
 
   if (
@@ -101,7 +117,16 @@ function App() {
 
   return (
     <div>
-      <div ref={hanziWriterRef} />
+      <Group justify="space-between">
+        <Checkbox
+          label="Fast"
+          onChange={(event) => setIsFastMode(event.currentTarget.checked)}
+        />
+        <Text>
+          {usedIndices.length} / {words.length}
+        </Text>
+      </Group>
+      <div ref={writerRef} />
       <Text>{words[currentIndex]["chữ hán"]}</Text>
       <Text>{words[currentIndex]["nghĩa"]}</Text>
       {isCorrect && (
@@ -117,7 +142,7 @@ function App() {
           >
             {words[currentIndex]["pinyin"]}
           </Text>
-          <Text size="40px">{words[currentIndex]["ví dụ"]}</Text>
+          <Text>{words[currentIndex]["ví dụ"]}</Text>
         </>
       )}
     </div>
