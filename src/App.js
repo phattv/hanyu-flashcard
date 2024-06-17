@@ -7,23 +7,11 @@ import { generateHanziWriter, source } from "./constants";
 
 function App() {
   const [words, setWords] = useState([]);
-  const [usedIndices, setUsedIndices] = useState([]);
+  const [usedIndexes, setUsedIndexes] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [isFastMode, setIsFastMode] = useState(false);
+  const [isFast, setIsFast] = useState(false);
   const writerRef = useRef();
-
-  useEffect(() => {
-    if (words[currentIndex] && words[currentIndex]["汉字"]) {
-      generateHanziWriter(
-        writerRef,
-        words[currentIndex]["汉字"],
-        onQuizCompleted,
-        false,
-        false
-      );
-    }
-  }, [words[currentIndex], currentIndex]);
 
   useEffect(() => {
     words?.length === 0 ? refreshData() : randomizeWord();
@@ -37,6 +25,18 @@ function App() {
     return () => window.removeEventListener("beforeunload", unloadCallback);
   }, []);
 
+  useEffect(() => {
+    if (words) {
+      generateHanziWriter(
+        writerRef,
+        words[currentIndex]["汉字"],
+        onComplete,
+        false,
+        isFast
+      );
+    }
+  }, [words[currentIndex], currentIndex, isFast]);
+
   const refreshData = () => {
     axios
       .get(source)
@@ -47,7 +47,7 @@ function App() {
           complete: (result) => {
             const parsedData = result.data.filter((row) => !!row["pinyin"]);
             setWords(parsedData);
-            setUsedIndices([]);
+            setUsedIndexes([]);
             randomizeWord(parsedData);
           },
           error: (error) => {
@@ -65,7 +65,7 @@ function App() {
 
     const newIndex = Math.floor(Math.random() * data.length);
     if (
-      usedIndices.includes(newIndex) ||
+      usedIndexes.includes(newIndex) ||
       !data[newIndex] ||
       !data[newIndex]["pinyin"]
     ) {
@@ -73,7 +73,7 @@ function App() {
       return;
     }
 
-    setUsedIndices((prevIndices) => [...prevIndices, newIndex]);
+    setUsedIndexes((prevIndices) => [...prevIndices, newIndex]);
     setCurrentIndex(newIndex);
   };
 
@@ -85,14 +85,14 @@ function App() {
     synth.speak(utterance);
   };
 
-  const onQuizCompleted = () => {
+  const onComplete = () => {
     setIsCorrect(true);
 
     const hanzis = words[currentIndex]["汉字"];
     speak(hanzis);
-    generateHanziWriter(writerRef, hanzis, onQuizCompleted, true, isFastMode);
+    generateHanziWriter(writerRef, hanzis, onComplete, true, isFast);
 
-    if (isFastMode) {
+    if (isFast) {
       setTimeout(() => {
         randomizeWord();
       }, 500);
@@ -120,10 +120,10 @@ function App() {
       <Group justify="space-between">
         <Checkbox
           label="Fast"
-          onChange={(event) => setIsFastMode(event.currentTarget.checked)}
+          onChange={(event) => setIsFast(event.currentTarget.checked)}
         />
         <Text>
-          {usedIndices.length} / {words.length}
+          {usedIndexes.length} / {words.length}
         </Text>
       </Group>
       <div ref={writerRef} />

@@ -51,7 +51,7 @@ const createSvgBackground = () => {
 const generateHanziWriter = (
   ref,
   hanzis,
-  onQuizCompleted,
+  onComplete,
   shouldAnimate,
   isFastMode
 ) => {
@@ -94,7 +94,7 @@ const generateHanziWriter = (
         onComplete: () => {
           completed++;
           if (completed === total) {
-            onQuizCompleted();
+            onComplete();
           }
         },
       });
