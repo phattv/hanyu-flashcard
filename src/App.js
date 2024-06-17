@@ -11,6 +11,7 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isFast, setIsFast] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
   const writerRef = useRef();
 
   useEffect(() => {
@@ -26,16 +27,17 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (words) {
+    if (words && words[currentIndex]) {
       generateHanziWriter(
         writerRef,
         words[currentIndex]["汉字"],
         onComplete,
         false,
-        isFast
+        isFast,
+        isRepeat
       );
     }
-  }, [words[currentIndex], currentIndex, isFast]);
+  }, [words[currentIndex], currentIndex, isFast, isRepeat]);
 
   const refreshData = () => {
     axios
@@ -62,6 +64,18 @@ function App() {
 
   const randomizeWord = (data = words) => {
     setIsCorrect(false);
+
+    if (isRepeat) {
+      generateHanziWriter(
+        writerRef,
+        words[currentIndex]["汉字"],
+        onComplete,
+        false,
+        isFast,
+        isRepeat
+      );
+      return;
+    }
 
     const newIndex = Math.floor(Math.random() * data.length);
     if (
@@ -90,7 +104,7 @@ function App() {
 
     const hanzis = words[currentIndex]["汉字"];
     speak(hanzis);
-    generateHanziWriter(writerRef, hanzis, onComplete, true, isFast);
+    generateHanziWriter(writerRef, hanzis, onComplete, true, isFast, isRepeat);
 
     if (isFast) {
       setTimeout(() => {
@@ -118,10 +132,16 @@ function App() {
   return (
     <div>
       <Group justify="space-between">
-        <Checkbox
-          label="Fast"
-          onChange={(event) => setIsFast(event.currentTarget.checked)}
-        />
+        <Group>
+          <Checkbox
+            label="Fast"
+            onChange={(event) => setIsFast(event.currentTarget.checked)}
+          />
+          <Checkbox
+            label="Repeat"
+            onChange={(event) => setIsRepeat(event.currentTarget.checked)}
+          />
+        </Group>
         <Text>
           {usedIndexes.length} / {words.length}
         </Text>
