@@ -129,6 +129,8 @@ function App() {
     );
   }
 
+  const row = words[currentIndex];
+
   return (
     <div>
       <Group justify="space-between">
@@ -147,22 +149,26 @@ function App() {
         </Text>
       </Group>
       <div ref={writerRef} />
-      <Text>{words[currentIndex]["chữ hán"]}</Text>
-      <Text>{words[currentIndex]["nghĩa"]}</Text>
+      <Text>{row["chữ hán"]}</Text>
+      <Text>{row["nghĩa"]}</Text>
+      <Text>
+        {isCorrect
+          ? row["ví dụ"]
+          : row["ví dụ"]?.replace(new RegExp(`[${row["汉字"]}]`, "g"), "…")}
+      </Text>
       {isCorrect && (
         <>
           <Text fw={700} size="50px">
-            {words[currentIndex]["汉字"]}
+            {row["汉字"]}
           </Text>
           <Text
             fw={500}
             size="40px"
             color="blue"
-            onClick={() => speak(words[currentIndex]["汉字"])}
+            onClick={() => speak(row["汉字"])}
           >
-            {words[currentIndex]["pinyin"]}
+            {row["pinyin"]}
           </Text>
-          <Text>{words[currentIndex]["ví dụ"]}</Text>
         </>
       )}
     </div>
