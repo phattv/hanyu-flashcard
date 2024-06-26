@@ -47,7 +47,9 @@ function App() {
         Papa.parse(csvData, {
           header: true,
           complete: (result) => {
-            const parsedData = result.data.filter((row) => !!row["pinyin"]);
+            const parsedData = result.data
+              .filter((row) => !!row["pinyin"])
+              .filter((row) => row["skip"] == "");
             setWords(parsedData);
             setUsedIndexes([]);
             randomizeWord(parsedData);
