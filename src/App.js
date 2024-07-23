@@ -47,9 +47,7 @@ function App() {
         Papa.parse(csvData, {
           header: true,
           complete: (result) => {
-            const parsedData = result.data
-              .filter((row) => !!row["pinyin"])
-              .filter((row) => row["skip"] == "");
+            const parsedData = result.data.filter((row) => !!row["pinyin"]);
             setWords(parsedData);
             setUsedIndexes([]);
             randomizeWord(parsedData);
@@ -79,9 +77,25 @@ function App() {
       return;
     }
 
-    const newIndex = Math.floor(Math.random() * data.length);
+    const priorityGroups = data.reduce((acc, word, index) => {
+      const priority = word.priority || "3"; // Default priority is 3 if not specified
+      if (!acc[priority]) {
+        acc[priority] = [];
+      }
+      acc[priority].push({ word, index });
+      return acc;
+    }, {});
+
+    const allRandomized = Object.values(priorityGroups).flatMap((group) => {
+      return group.sort(() => Math.random() - 0.5); // Randomize each priority group
+    });
+
+    const newIndex = allRandomized.find(
+      ({ index }) => !usedIndexes.includes(index)
+    )?.index;
+
     if (
-      usedIndexes.includes(newIndex) ||
+      newIndex === undefined ||
       !data[newIndex] ||
       !data[newIndex]["pinyin"]
     ) {
