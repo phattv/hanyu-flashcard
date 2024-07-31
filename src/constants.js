@@ -1,17 +1,17 @@
-// https://hanziwriter.org/docs.html#api-link
 import HanziWriter from "hanzi-writer";
 
 const source =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTzOh48B6TCcx3ExlqzXs9Dcf7Z4792Q8IhJzE_uAd3hCx_-VF-o9DWwdJVcOaNqeE4hHlvSO9l4MOt/pub?gid=0&single=true&output=csv";
 
 const size = 250;
+// https://hanziwriter.org/docs.html#api-link
 const hanziConfig = {
   showOutline: false,
   showCharacter: false,
   width: size,
   height: size,
   padding: 5,
-  strokeAnimationSpeed: 5,
+  strokeAnimationSpeed: 100,
   strokeHighlightSpeed: 2,
   delayBetweenStrokes: 0,
   delayBetweenLoops: 200,
